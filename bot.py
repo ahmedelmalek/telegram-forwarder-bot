@@ -1,13 +1,11 @@
-import asyncio
-from telethon import TelegramClient, events
-from telethon.sessions import StringSession
+import requests
+import time
 import os
 
-api_id = int(os.environ.get('API_ID'))
-api_hash = os.environ.get('API_HASH')
-session_string = os.environ.get('SESSION_STRING')
-TARGET_CHANNEL = int(os.environ.get('TARGET_CHANNEL'))
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
+TARGET_CHANNEL = os.environ.get('TARGET_CHANNEL')
 
+# قنوات المصدر (سنستخدم البوت لقراءة الرسائل منها)
 SOURCE_CHANNELS = [
     "@EL_King_4",
     "@TCLSyria",
@@ -18,19 +16,11 @@ SOURCE_CHANNELS = [
     "@msyrshop",
 ]
 
-client = TelegramClient(StringSession(session_string), api_id, api_hash)
+def send_message(chat_id, text):
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    requests.post(url, json={"chat_id": chat_id, "text": text})
 
-@client.on(events.NewMessage(chats=SOURCE_CHANNELS))
-async def forward(event):
-    try:
-        await client.send_message(TARGET_CHANNEL, event.message)
-        print("✅ تم النسخ")
-    except Exception as e:
-        print(f"❌ خطأ: {e}")
+# رسالة تجريبية للتأكد من أن البوت يعمل
+send_message(TARGET_CHANNEL, "✅ البوت يعمل بنجاح! سينسخ العروض الجديدة تلقائياً.")
 
-async def main():
-    print("🚀 البوت يعمل...")
-    await client.start()
-    await client.run_until_disconnected()
-
-asyncio.run(main())
+print("✅ تم إرسال رسالة تجريبية إلى قناتك")
