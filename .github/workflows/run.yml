@@ -1,0 +1,19 @@
+name: تشغيل البوت
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+      - run: pip install -r requirements.txt
+      - run: python bot.py
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
+          PHONE: ${{ secrets.PHONE }}
