@@ -2,7 +2,7 @@ name: تشغيل البوت
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -10,21 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
-      - name: Install dependencies
-        run: |
-          pip install telethon
-      
-      - name: Run bot
+      - run: pip install -r requirements.txt
+      - run: python bot.py
         env:
-          API_ID: ${{ secrets.API_ID }}
-          API_HASH: ${{ secrets.API_HASH }}
-          SESSION_STRING: ${{ secrets.SESSION_STRING }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           TARGET_CHANNEL: ${{ secrets.TARGET_CHANNEL }}
-        run: |
-          python bot.py
