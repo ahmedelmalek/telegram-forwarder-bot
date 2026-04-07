@@ -9,9 +9,7 @@ API_HASH = os.environ.get('API_HASH')
 SESSION_STRING = os.environ.get('SESSION_STRING')
 TARGET_CHANNEL = int(os.environ.get('TARGET_CHANNEL'))
 
-# ==================== جميع القنوات ====================
 SOURCE_CHANNELS = [
-    # أجهزة كهربائية
     "@EL_King_4",
     "@TCLSyria",
     "@syrian_company_sy",
@@ -19,55 +17,51 @@ SOURCE_CHANNELS = [
     "@belleni",
     "@awladmahmoud5",
     "@msyrshop",
-    # أزياء
-    "@tagfashion",
-    # أدوات منزلية
-    "@magdyism",
-    # كوبونات
-    "@alcouponat1",
-    # سفر
-    "@zwaiatravel",
-    # تقنية
-    "@electromara1",
-    "@vaasutechdeals",
 ]
 
 client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 
-async def join_all_channels():
-    """طلب الانضمام إلى جميع القنوات"""
-    print("\n📡 جاري طلب الانضمام إلى جميع القنوات...\n")
+async def copy_recent_messages():
+    """نسخ آخر 5 منشورات من كل قناة"""
+    print("\n📡 جاري نسخ آخر المنشورات من القنوات...\n")
     
+    for channel in SOURCE_CHANNELS:
+        try:
+            # جلب آخر 5 منشورات
+            messages = await client.get_messages(channel, limit=5)
+            count = 0
+            
+            for msg in messages:
+                if msg:
+                    await client.send_message(TARGET_CHANNEL, msg)
+                    count += 1
+                    print(f"✅ تم نسخ منشور {count}/5 من {channel}")
+                    await asyncio.sleep(2)  # تأخير 2 ثانية بين كل منشور
+            
+            print(f"📊 اكتمل: {channel} → {count} منشورات\n")
+            
+        except Exception as e:
+            print(f"❌ خطأ في {channel}: {e}")
+    
+    print("✅ انتهى نسخ آخر المنشورات!")
+
+async def main():
+    print("🚀 بوت النسخ يعمل...")
+    await client.start()
+    print("✅ تم تسجيل الدخول!")
+    
+    # طلب الانضمام إلى القنوات
     for channel in SOURCE_CHANNELS:
         try:
             await client(JoinChannelRequest(channel))
             print(f"✅ تم الانضمام إلى {channel}")
-        except Exception as e:
-            error = str(e)
-            if "USER_ALREADY_PARTICIPANT" in error:
-                print(f"ℹ️ بالفعل عضو في {channel}")
-            elif "Invite request sent" in error:
-                print(f"📨 تم إرسال طلب انضمام إلى {channel} (في انتظار الموافقة)")
-            elif "FLOOD_WAIT" in error:
-                print(f"⚠️ انتظر قليلاً قبل الانضمام إلى {channel}")
-            else:
-                print(f"❌ فشل الانضمام إلى {channel}: {error[:60]}")
-        
-        await asyncio.sleep(1)  # تأخير بسيط بين الطلبات
+        except:
+            pass
     
-    print("\n✅ اكتملت طلبات الانضمام\n")
-
-async def main():
-    print("🚀 بوت النسخ متعدد المجالات يعمل...")
-    await client.start()
-    print("✅ تم تسجيل الدخول بنجاح!")
+    # نسخ آخر 5 منشورات من كل قناة
+    await copy_recent_messages()
     
-    # طلب الانضمام إلى جميع القنوات
-    await join_all_channels()
-    
-    print(f"📡 يتابع {len(SOURCE_CHANNELS)} قناة في مجالات مختلفة")
-    print("🎯 جاهز لنسخ العروض الجديدة...")
-    
+    print("🎯 جاهز لنسخ المنشورات الجديدة...")
     await client.run_until_disconnected()
 
 @client.on(events.NewMessage(chats=SOURCE_CHANNELS))
@@ -77,6 +71,6 @@ async def forward_new(event):
         await client.send_message(TARGET_CHANNEL, event.message)
         print(f"✅ تم نسخ منشور جديد")
     except Exception as e:
-        print(f"❌ خطأ في النسخ: {e}")
+        print(f"❌ خطأ: {e}")
 
 asyncio.run(main())
