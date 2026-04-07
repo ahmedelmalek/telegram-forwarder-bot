@@ -9,7 +9,7 @@ API_HASH = os.environ.get('API_HASH')
 SESSION_STRING = os.environ.get('SESSION_STRING')
 TARGET_CHANNEL = int(os.environ.get('TARGET_CHANNEL'))
 
-# قنوات المصدر
+# قنوات المصدر (العروض)
 SOURCE_CHANNELS = [
     "@EL_King_4",
     "@TCLSyria",
@@ -25,16 +25,19 @@ client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 
 @client.on(events.NewMessage(chats=SOURCE_CHANNELS))
 async def forward(event):
+    """عندما تنشر أي قناة مصدر منشوراً جديداً، ينسخه البوت إلى قناتك"""
     try:
         await client.send_message(TARGET_CHANNEL, event.message)
-        print("✅ تم نسخ منشور جديد")
+        print(f"✅ تم نسخ منشور جديد")
     except Exception as e:
-        print(f"❌ خطأ: {e}")
+        print(f"❌ خطأ في النسخ: {e}")
 
 async def main():
-    print("🚀 بوت النسخ يعمل...")
+    print("🚀 بوت نسخ العروض يعمل...")
+    print(f"📡 يتابع {len(SOURCE_CHANNELS)} قناة")
     await client.start()
     print("✅ تم تسجيل الدخول بنجاح!")
+    print("🎯 في انتظار منشورات جديدة...")
     await client.run_until_disconnected()
 
 asyncio.run(main())
