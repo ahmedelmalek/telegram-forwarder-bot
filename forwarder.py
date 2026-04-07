@@ -5,6 +5,7 @@ from telethon.tl.functions.channels import JoinChannelRequest
 import os
 from datetime import datetime
 import calendar
+import random
 
 API_ID = int(os.environ.get('API_ID'))
 API_HASH = os.environ.get('API_HASH')
@@ -21,8 +22,10 @@ SOURCE_CHANNELS = [
     "@msyrshop",
 ]
 
-# هاشتاجات حسب اليوم
+# =============== دوال التنسيق ===============
+
 def get_hashtags():
+    """هاشتاجات حسب اليوم"""
     day = datetime.now().strftime("%A")
     hashtags = {
         "Saturday": "#عروض_السبت #اجهزة_كهربائية #تخفيضات",
@@ -35,8 +38,8 @@ def get_hashtags():
     }
     return hashtags.get(day, "#عروض #تخفيضات #اجهزة_كهربائية")
 
-# تنسيق المنشورات
 def format_post(text):
+    """تنسيق المنشورات بشكل جذاب"""
     return f"""
 🔥 *عرض حصري* 🔥
 
@@ -58,10 +61,14 @@ TIPS = [
     "💡 *نصيحة:* تأكد من الضمان وخدمة ما بعد البيع",
 ]
 
+# =============== العميل ===============
+
 client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 
+# =============== المهام الأساسية ===============
+
 async def copy_recent_messages():
-    """نسخ آخر المنشورات مع تنسيق وهاشتاجات"""
+    """نسخ آخر 3 منشورات من كل قناة"""
     print("\n📡 جاري نسخ آخر المنشورات...\n")
     
     for channel in SOURCE_CHANNELS:
@@ -82,20 +89,19 @@ async def copy_recent_messages():
             print(f"❌ خطأ في {channel}: {e}")
 
 async def send_tip():
-    """إرسال نصيحة شراء بشكل دوري"""
-    import random
+    """إرسال نصيحة شراء كل 6 ساعات"""
     while True:
         try:
             tip = random.choice(TIPS)
             await client.send_message(TARGET_CHANNEL, tip)
             print("✅ تم إرسال نصيحة شراء")
-            await asyncio.sleep(21600)  # كل 6 ساعات
+            await asyncio.sleep(21600)  # 6 ساعات
         except Exception as e:
             print(f"❌ خطأ في نصيحة: {e}")
             await asyncio.sleep(21600)
 
 async def auto_promote():
-    """ترويج تلقائي للقناة"""
+    """ترويج تلقائي للقناة كل ساعتين"""
     while True:
         try:
             promo = f"""
@@ -111,34 +117,41 @@ async def auto_promote():
 """
             await client.send_message(TARGET_CHANNEL, promo)
             print("✅ تم إرسال ترويج")
-            await asyncio.sleep(7200)  # كل ساعتين
+            await asyncio.sleep(7200)  # ساعتين
         except Exception as e:
             print(f"❌ خطأ في الترويج: {e}")
             await asyncio.sleep(7200)
 
+# =============== معالج المنشورات الجديدة ===============
+
 @client.on(events.NewMessage(chats=SOURCE_CHANNELS))
 async def forward_new(event):
-    """نسخ المنشورات الجديدة مع تنسيق"""
+    """نسخ المنشورات الجديدة فوراً مع تنسيق"""
     try:
         if event.message.text:
             formatted = format_post(event.message.text)
             await client.send_message(TARGET_CHANNEL, formatted)
-            print(f"✅ تم نسخ منشور جديد مع تنسيق")
+            print(f"✅ تم نسخ منشور جديد")
     except Exception as e:
-        print(f"❌ خطأ: {e}")
+        print(f"❌ خطأ في النسخ: {e}")
+
+# =============== التشغيل الرئيسي ===============
 
 async def main():
     print("🚀 بوت الترويج التلقائي يعمل...")
     await client.start()
-    print("✅ تم تسجيل الدخول!")
+    
+    # ✅ هذا السطر هو الحل لمشكلة AuthKeyDuplicatedError ✅
+    me = await client.get_me()
+    print(f"✅ تم تسجيل الدخول كـ: {me.first_name} (@{me.username})")
     
     # الانضمام إلى القنوات
     for channel in SOURCE_CHANNELS:
         try:
             await client(JoinChannelRequest(channel))
             print(f"✅ تم الانضمام إلى {channel}")
-        except:
-            pass
+        except Exception as e:
+            print(f"⚠️ مشكلة في {channel}: {str(e)[:50]}")
     
     # نسخ آخر المنشورات
     await copy_recent_messages()
@@ -147,7 +160,15 @@ async def main():
     asyncio.create_task(auto_promote())
     asyncio.create_task(send_tip())
     
-    print("🎯 جاهز لنسخ المنشورات الجديدة والترويج...")
+    print("🎯 جاهز لنسخ المنشورات الجديدة...")
     await client.run_until_disconnected()
 
-asyncio.run(main())
+# =============== تشغيل البرنامج ===============
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("🛑 تم إيقاف البوت يدوياً")
+    except Exception as e:
+        print(f"❌ خطأ عام: {e}")
