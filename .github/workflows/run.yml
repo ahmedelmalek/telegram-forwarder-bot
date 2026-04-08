@@ -1,22 +1,29 @@
-name: تشغيل البوت
+name: تشغيل بوت RSS
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '0 */3 * * *'   # كل 6 ساعات
   workflow_dispatch:
 
 jobs:
   run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: تحميل الكود
+        uses: actions/checkout@v4
+      
+      - name: إعداد Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install telethon
-      - run: python forwarder.py
+      
+      - name: تثبيت المكتبات
+        run: |
+          pip install -r requirements.txt
+      
+      - name: تشغيل البوت
         env:
-          API_ID: ${{ secrets.API_ID }}
-          API_HASH: ${{ secrets.API_HASH }}
-          SESSION_STRING: ${{ secrets.SESSION_STRING }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           TARGET_CHANNEL: ${{ secrets.TARGET_CHANNEL }}
+        run: |
+          python rss_bot.py
